@@ -52,7 +52,7 @@ struct IntroSceneView: View {
                 .scaleEffect(showImage ? 1 : 1.05)
 
            
-            VStack(alignment: .center, spacing: 12) {
+            VStack(alignment: .center, spacing: 19) {
                 ForEach(0..<visibleMessageCount, id: \.self) { idx in
                     Text(data.messages[idx])
                         .font(.system(size: 15))
