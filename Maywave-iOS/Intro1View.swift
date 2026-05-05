@@ -9,10 +9,14 @@ import SwiftUI
 
 struct Intro1View: View {
     var body: some View {
-        Image("background")
-            .resizable()
-            .scaledToFill()
-            .ignoresSafeArea()
+        ZStack {
+            Color.white.ignoresSafeArea()
+
+            Image("logo")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 70)
+        }
     }
 }
 

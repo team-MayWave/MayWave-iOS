@@ -13,15 +13,9 @@ struct ContentView: View {
     
     var body: some View {
         ZStack {
-            
-            // 👉 메인 화면 (배경 이미지)
-            Image("background")
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea()
+            RoleSelectionView()
                 .opacity(isLaunch ? 0 : 1)
             
-            // 👉 인트로 화면
             if isLaunch {
                 Intro1View()
                     .transition(.opacity)
