@@ -11,6 +11,7 @@ import SwiftUI
 struct ChatBubbleView: View {
     let name: String
     let message: String
+    @State private var isVisible = false
 
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
@@ -42,7 +43,14 @@ struct ChatBubbleView: View {
 
             Spacer()
         }
+        .opacity(isVisible ? 1 : 0)
+        .offset(y: isVisible ? 0 : 10)
         .padding(.horizontal, 20)
+        .onAppear {
+            withAnimation(.easeOut(duration: 0.4)) {
+                isVisible = true
+            }
+        }
     }
 }
 

@@ -17,6 +17,7 @@ struct IntroSceneData {
 struct IntroSceneView: View {
 
     let data: IntroSceneData
+    var onFinished: (() -> Void)? = nil
 
     @State private var showImage = false
     @State private var visibleMessageCount: Int = 0
@@ -81,6 +82,11 @@ struct IntroSceneView: View {
                         visibleMessageCount = min(visibleMessageCount + 1, data.messages.count)
                     }
                 }
+            }
+            
+            let totalDuration = 1 + Double(data.messages.count) + 1
+            DispatchQueue.main.asyncAfter(deadline: .now() + totalDuration) {
+                onFinished?()
             }
         }
     }

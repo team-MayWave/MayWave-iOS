@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct CitizenChatView: View {
+    @State private var showFirstChat = false
 
     var body: some View {
         ZStack {
@@ -53,8 +54,19 @@ struct CitizenChatView: View {
                                     "시내 분위기가 심상치 않습니다",
                                     "사람들이 모여들기 시작합니다"
                                 ]
-                            )
+                            ),
+                            onFinished: {
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                                    showFirstChat = true
+                                }
+                            }
                         )
+                        if showFirstChat {
+                            ChatBubbleView(
+                                name: "친구",
+                                message: "전남대 쪽에서 학생들이 막혔다더라.\n계엄군이 들어왔대."
+                            )
+                        }
 
                     }
                     .padding(.bottom, 40)
