@@ -29,6 +29,16 @@
 			path = "Maywave-iOS";
 			sourceTree = "<group>";
 		};
+		E5F44FCD2FA9C0C60083DA7F /* View */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = View;
+			sourceTree = "<group>";
+		};
+		E5F44FD72FA9C97E0083DA7F /* Component */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Component;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -47,6 +57,8 @@
 			children = (
 				E53EE97D2FA8ED0100E525D1 /* Maywave-iOS */,
 				E53EE97C2FA8ED0100E525D1 /* Products */,
+				E5F44FCD2FA9C0C60083DA7F /* View */,
+				E5F44FD72FA9C97E0083DA7F /* Component */,
 			);
 			sourceTree = "<group>";
 		};
@@ -75,6 +87,8 @@
 			);
 			fileSystemSynchronizedGroups = (
 				E53EE97D2FA8ED0100E525D1 /* Maywave-iOS */,
+				E5F44FCD2FA9C0C60083DA7F /* View */,
+				E5F44FD72FA9C97E0083DA7F /* Component */,
 			);
 			name = "Maywave-iOS";
 			packageProductDependencies = (
