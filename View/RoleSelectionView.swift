@@ -98,7 +98,7 @@ struct RoleSelectionView: View {
                 // 다음 화면 연결 지점
             } label: {
                 Text("선택하기")
-                    .font(.system(size: 22, design: .serif))
+                    .font(.custom("NanumMyeongjoBold", size: 22))
                     .foregroundStyle(.white)
                     .shadow(color: .white.opacity(0.95), radius: 10)
                     .frame(width: 150, height: 48)
@@ -114,7 +114,7 @@ struct RoleSelectionView: View {
     private var roleText: some View {
         VStack(spacing: 15) {
             Text(selectedRole.title)
-                .font(.system(size: 32, design: .serif))
+                .font(.custom("NanumMyeongjoExtraBold", size: 32))
                 .foregroundStyle(.white)
                 .shadow(color: .black.opacity(0.65), radius: 6, y: 2)
 
@@ -125,7 +125,7 @@ struct RoleSelectionView: View {
                 .padding(.bottom, 17)
 
             Text(selectedRole.subtitle)
-                .font(.system(size: 15, design: .serif))
+                .font(.custom("NanumMyeongjo", size: 15))
                 .lineSpacing(5)
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.white.opacity(0.9))
