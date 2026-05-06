@@ -16,8 +16,13 @@ private struct Role: Identifiable {
     let imageTopOffset: CGFloat
 }
 
+private struct ActiveRole: Identifiable {
+    let id: String
+}
+
 struct RoleSelectionView: View {
     @State private var selectedIndex = 0
+    @State private var activeRole: ActiveRole?
     private let figmaSize = CGSize(width: 401, height: 866)
 
     private let roles = [
@@ -95,10 +100,10 @@ struct RoleSelectionView: View {
                 .position(x: figmaSize.width / 2, y: 662)
 
             Button {
-                // 다음 화면 연결 지점
+                activeRole = ActiveRole(id: selectedRole.title)
             } label: {
                 Text("선택하기")
-                    .font(.custom("NanumMyeongjoBold", size: 22))
+                    .font(.custom("NanumMyeongjo", size: 22))
                     .foregroundStyle(.white)
                     .shadow(color: .white.opacity(0.95), radius: 10)
                     .frame(width: 150, height: 48)
@@ -109,6 +114,15 @@ struct RoleSelectionView: View {
         .frame(width: figmaSize.width, height: figmaSize.height)
         .clipped()
         .animation(.easeInOut(duration: 0.28), value: selectedIndex)
+        .fullScreenCover(item: $activeRole) { role in
+            if role.id == "의사" {
+                DoctorChatView()
+            } else if role.id == "시민" {
+                CitizenChatView()
+            } else {
+                JournalistChatView()
+            }
+        }
     }
 
     private var roleText: some View {

@@ -1,51 +1,44 @@
 //
-//  CitizenChatViewController.swift
+//  JournalistChatViewController.swift
 //  Maywave-iOS
 //
-//  Created by 김준표 on 5/5/26.
+//  Created by Codex on 5/6/26.
 //
 
 import SwiftUI
 
-struct CitizenChatView: View {
+struct JournalistChatView: View {
     private enum EndingPage {
         case none
         case first
         case second
     }
 
-    private enum CitizenStep {
+    private enum JournalistStep {
         case narration(String)
         case chat(String, String)
         case my(String)
         case image(String, CGFloat, CGFloat)
         case record(String, CGFloat, CGFloat, [String])
         case firstChoices
-        case fallenChoices
     }
 
     private struct TimelineStep: Identifiable {
         let id = UUID()
-        let content: CitizenStep
+        let content: JournalistStep
     }
 
     @Environment(\.dismiss) private var dismiss
     @State private var steps: [TimelineStep] = []
     @State private var selectedFirstChoice: String?
-    @State private var selectedFallenChoice: String?
     @State private var endingPage: EndingPage = .none
     @State private var scrollTrigger = 0
 
     private let stepDelay = 2.0
 
     private let firstChoices = [
-        "가까이 가서 본다",
-        "멀리서 지켜 본다"
-    ]
-
-    private let fallenChoices = [
-        "쓰러진 사람에게 다가간다",
-        "뒤로 물러나 상황을 피한다"
+        "계속 촬영한다",
+        "도망친다"
     ]
 
     var body: some View {
@@ -104,7 +97,7 @@ struct CitizenChatView: View {
             }
 
             VStack(spacing: 4) {
-                Text("시민")
+                Text("기자")
                     .font(.custom("NanumMyeongjoExtraBold", size: 25))
                     .foregroundColor(.white)
 
@@ -130,19 +123,14 @@ struct CitizenChatView: View {
             ),
             onFinished: {
                 guard steps.isEmpty else { return }
-                reveal([
-                    .chat("친구", "전남대 쪽에서 학생들이 막혔다더라.\n계엄군이 들어왔대."),
-                    .my("무슨 일인데?"),
-                    .narration("잠시 후, 군인들이 시내로 이동합니다."),
-                    .firstChoices
-                ])
+                reveal(baseSteps)
             }
         )
-        .id("citizenIntro")
+        .id("journalistIntro")
     }
 
     @ViewBuilder
-    private func stepView(_ step: CitizenStep) -> some View {
+    private func stepView(_ step: JournalistStep) -> some View {
         switch step {
         case .narration(let text):
             Text(text)
@@ -178,15 +166,6 @@ struct CitizenChatView: View {
                 onSelect: handleFirstChoice
             )
             .padding(.top, 26)
-
-        case .fallenChoices:
-            ChoicePromptView(
-                title: "당신의 선택은?",
-                choices: fallenChoices,
-                selectedChoice: selectedFallenChoice,
-                onSelect: handleFallenChoice
-            )
-            .padding(.top, 26)
         }
     }
 
@@ -196,145 +175,93 @@ struct CitizenChatView: View {
         scrollTrigger += 1
 
         if choice == firstChoices[0] {
-            reveal(approachSteps)
+            reveal(keepRecordingSteps) {
+                showEndingAfterDelay()
+            }
         } else {
-            reveal(watchSteps) {
+            reveal(escapeSteps) {
                 showEndingAfterDelay()
             }
         }
     }
 
-    private func handleFallenChoice(_ choice: String) {
-        guard selectedFallenChoice == nil else { return }
-        selectedFallenChoice = choice
-        scrollTrigger += 1
-
-        if choice == fallenChoices[0] {
-            reveal(helpFallenSteps) {
-                showEndingAfterDelay()
-            }
-        } else {
-            reveal(avoidFallenSteps) {
-                showEndingAfterDelay()
-            }
-        }
-    }
-
-    private var approachSteps: [CitizenStep] {
+    private var baseSteps: [JournalistStep] {
         [
-            .narration("당신은 불안함 속에서도 발걸음을 옮겼습니다."),
-            .narration("당시에도 많은 시민들이"),
-            .narration("무슨 일이 일어나고 있는지 직접 확인하려 했습니다."),
-            .my("뭔가 이상한데...\n가까이 가서 확인해볼게."),
-            .narration("사람들 사이를 지나 더 가까이 다가갑니다."),
-            .chat("주변 시민", "왜 저렇게까지 서 있는 거야..."),
-            .narration("군인들이 줄을 서 있습니다."),
-            .chat("친구", "야.. 분위기 이상한데"),
+            .narration("당신은 소식을 듣고 현장에 도착했습니다."),
+            .narration("이미 혼란이 번진 상황입니다."),
             .my("....."),
-            .image("twoscene", 357, 268),
-            .narration("순간, 군인들이 움직이기 시작합니다."),
-            .chat("주변 시민", "뒤로 가! 위험해!"),
-            .narration("사람들이 뒤로 밀려납니다."),
-            .chat("주변 시민", "일으켜! 괜찮아?!"),
+            .narration("사람들이 모여 있고,"),
+            .narration("곳곳에서 혼란이 이어지고 있습니다."),
+            .chat("주변 시민", "다쳤어요 여기 좀 봐주세요!"),
             .my("....."),
-            .narration("넘어지는 사람이 보입니다."),
-            .fallenChoices
+            .my("카메라... 켜"),
+            .narration("당신은 상황을 기록하기 시작합니다."),
+            .narration("렌즈에 모든 장면이 떨리며 담깁니다."),
+            .image("editer1", 345, 259),
+            .narration("군인들과 시민들이"),
+            .narration("뒤엉켜 있습니다."),
+            .narration("부상자들이 계속 발생하고 있습니다."),
+            .my("이건..."),
+            .my("남겨야 돼..."),
+            .narration("당신이 카메라를 들고 있는 순간,"),
+            .narration("한 군인이 당신을 바라봅니다."),
+            .narration("시선이 마주칩니다."),
+            .my("..."),
+            .firstChoices
         ]
     }
 
-    private var helpFallenSteps: [CitizenStep] {
+    private var keepRecordingSteps: [JournalistStep] {
         [
-            .narration("당신은 망설임 속에서도 발걸음을 옮겼습니다."),
-            .narration("그날, 많은 시민들이"),
-            .narration("서로를 지키기 위해 손을 내밀었습니다."),
-            .my("괜찮아요?"),
-            .image("fourscene", 369, 246),
-            .narration("혼란 속에서 사람들이 움직이기 시작합니다."),
-            .chat("주변 시민", "여기 좀 봐줘!"),
-            .narration("당신은 그 자리에 서 있었습니다."),
-            .narration("아직 상황을 완전히 이해하지 못한 채,"),
-            .narration("그저 바라보고 있습니다."),
-            .narration("그날의 일은,"),
-            .narration("단순한 충돌로 끝나지 않았습니다."),
+            .narration("당신은 위험 속에서도 기록을 선택했습니다."),
+            .narration("그날의 많은 장면들은"),
+            .narration("이러한 기록을 통해"),
+            .narration("세상에 알려지게 되었습니다."),
+            .my("지금 멈출 수 없어"),
+            .narration("당신은 카메라를 내려놓지 않습니다."),
+            .chat("군인", "야 뭐 찍어"),
+            .narration("위험한 순간까지 가까워집니다."),
+            .narration("군인이 점점 앞으로 다가옵니다."),
+            .chat("군인", "카메라 내려!"),
+            .my("...."),
+            .narration("당신은 끝까지 카메라를 놓지 않습니다."),
+            .narration("그 순간까지 기록합니다."),
+            .narration("..."),
             .record(
-                "sevenscene",
-                292,
-                439,
+                "editer3",
+                345,
+                259,
                 [
-                    "더 많은 시민들이 거리로 나오기 시작했습니다.",
-                    "전날의 사건은",
-                    "광주 전역으로 퍼져나갔습니다.",
-                    "당신은 그 시작을 목격했습니다."
+                    "광주에서 벌어진 일들은",
+                    "많은 기록을 통해",
+                    "이후 세상에 알려지게 되었습니다."
                 ]
             )
         ]
     }
 
-    private var avoidFallenSteps: [CitizenStep] {
+    private var escapeSteps: [JournalistStep] {
         [
-            .narration("당신은 선뜻 움직이지 못했습니다."),
-            .narration("눈앞의 상황은 낯설고,"),
-            .narration("어디까지 다가가야 할지 알 수 없었습니다."),
-            .narration("그날, 많은 시민들이"),
-            .narration("같은 자리에서 상황을 바라보고 있었습니다."),
-            .my("여기서 더 가면 위험할 것 같아."),
-            .narration("당신은 한 발짝 뒤로 물러납니다."),
-            .narration("사람들 사이에 가려 앞쪽이 잘 보이지 않습니다."),
-            .chat("주변 시민", "일으켜! 괜찮아?!"),
-            .narration("누군가를 부르는 소리가 들립니다."),
-            .narration("하지만, 정확히 보이지는 않습니다."),
-            .image("fivescene", 338, 226),
-            .narration("당신은 그 자리에 서서,"),
-            .narration("상황을 바라보고 있습니다."),
+            .narration("당신은 안전을 선택했습니다."),
+            .narration("하지만 그날의 모든 장면이"),
+            .narration("기록으로 남을 수는 없었습니다."),
+            .narration("당신은 몸을 돌리지 않습니다."),
+            .narration("카메라는 내려간 채입니다."),
+            .my("..."),
             .record(
-                "sixscene",
-                355,
-                237,
+                "editer2",
+                345,
+                259,
                 [
-                    "더 많은 시민들이 거리로 나왔습니다.",
-                    "당신이 멀리서 바라보던 그 순간에도,",
-                    "많은 사람들은 같은 자리에서",
-                    "상황을 지켜보고 있었습니다.",
-                    "전날의 일은",
-                    "광주 전역으로 퍼져나갔습니다."
+                    "광주에서는",
+                    "많은 사건들이 발생했지만,",
+                    "모든 순간이 기록되지는 않았습니다."
                 ]
             )
         ]
     }
 
-    private var watchSteps: [CitizenStep] {
-        [
-            .narration("당신은 선뜻 움직이지 못했습니다."),
-            .narration("눈앞의 상황은 낯설고,"),
-            .narration("어디까지 다가가야 할지 알 수 없었습니다."),
-            .narration("그날, 많은 시민들이"),
-            .narration("같은 자리에서 상황을 지켜보고 있었습니다."),
-            .my("뭔가 이상한데...\n지금은 좀 떨어져서 보자."),
-            .narration("사람들 사이에 섞이지 않고, 뒤에서 상황을 바라봅니다."),
-            .narration("앞쪽에서 갑자기 사람들이 크게 움직이기 시작합니다."),
-            .chat("주변 시민", "뒤로 가 위험해!"),
-            .narration("무슨 일이 일어나고 있는지"),
-            .narration("정확히 보이지 않습니다."),
-            .narration("당신은 그 자리에 서서,"),
-            .narration("그저 상황을 바라보고 있습니다."),
-            .record(
-                "threescene",
-                348,
-                435,
-                [
-                    "더 많은 시민들이 거리로 나왔습니다.",
-                    "당신이 직접 목격한 그 장면들은",
-                    "사람들 사이에서 빠르게 퍼져나갔습니다.",
-                    "전날의 일은",
-                    "광주 전역으로 퍼져나갔습니다.",
-                    "당신은 그날의 시작을,",
-                    "그 자리에서 지켜보고 있었습니다."
-                ]
-            )
-        ]
-    }
-
-    private func reveal(_ newSteps: [CitizenStep], completion: (() -> Void)? = nil) {
+    private func reveal(_ newSteps: [JournalistStep], completion: (() -> Void)? = nil) {
         for (index, step) in newSteps.enumerated() {
             DispatchQueue.main.asyncAfter(deadline: .now() + Double(index + 1) * stepDelay) {
                 steps.append(TimelineStep(content: step))
@@ -362,13 +289,13 @@ struct CitizenChatView: View {
                     EndingTextView(
                         lines: [
                             "그날,",
-                            "많은 시민들이 거리로 나섰고,",
-                            "또 다른 이들은",
-                            "그 자리에 서서 상황을 지켜봤습니다.",
-                            "각자의 선택은 달랐지만,",
-                            "모두가 같은 시간을 지나고 있었습니다.",
-                            "당신은,",
-                            "그날의 한 사람이었습니다."
+                            "어떤 장면은 기록으로 남았고,",
+                            "어떤 장면은 남지 못했습니다.",
+                            "하지만 기록된 것과",
+                            "기록되지 못한 것 모두,",
+                            "그날의 일부였습니다.",
+                            "그날의 진실은",
+                            "그렇게 이어지고 있습니다."
                         ]
                     )
                     .contentShape(Rectangle())
@@ -419,5 +346,5 @@ struct CitizenChatView: View {
 }
 
 #Preview {
-    CitizenChatView()
+    JournalistChatView()
 }

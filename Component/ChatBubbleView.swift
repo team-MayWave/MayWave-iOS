@@ -26,15 +26,16 @@ struct ChatBubbleView: View {
             VStack(alignment: .leading, spacing: 6) {
                 
                 Text(name)
-                    .font(.system(size: 13))
+                    .font(.custom("NanumMyeongjo", size: 11))
                     .foregroundColor(Color.white.opacity(0.7))
 
               
                 Text(message)
-                    .font(.system(size: 15))
+                    .font(.custom("NanumMyeongjo", size: 12))
                     .foregroundColor(.white)
+                    .lineSpacing(2)
                     .padding(.horizontal, 14)
-                    .padding(.vertical, 10)
+                    .padding(.vertical, 9)
                     .background(
                         RoundedRectangle(cornerRadius: 14)
                             .fill(Color.gray.opacity(0.25))
@@ -45,7 +46,7 @@ struct ChatBubbleView: View {
         }
         .opacity(isVisible ? 1 : 0)
         .offset(y: isVisible ? 0 : 10)
-        .padding(.horizontal, 20)
+        .padding(.horizontal, 26)
         .onAppear {
             withAnimation(.easeOut(duration: 0.4)) {
                 isVisible = true
