@@ -29,10 +29,14 @@ struct JournalistChatView: View {
     }
 
     @Environment(\.dismiss) private var dismiss
+    var onBackToRoleSelection: (() -> Void)? = nil
     @State private var steps: [TimelineStep] = []
     @State private var selectedFirstChoice: String?
     @State private var endingPage: EndingPage = .none
     @State private var scrollTrigger = 0
+    @State private var showHistoryInfo = false
+    @State private var presentedHistoryInfo: HistoryInfoData?
+    @State private var readHistoryInfoIDs: Set<String> = []
 
     private let stepDelay = 2.0
 
@@ -78,6 +82,24 @@ struct JournalistChatView: View {
             } else {
                 endingContent
             }
+
+            if showHistoryInfo {
+                let info = presentedHistoryInfo ?? currentHistoryInfo
+
+                HistoryInfoOverlay(info: info) {
+                    readHistoryInfoIDs.insert(info.id)
+                    withAnimation(.easeOut(duration: 0.25)) {
+                        showHistoryInfo = false
+                    }
+                }
+            }
+        }
+        .onChange(of: showHistoryInfo) { _, isPresented in
+            if isPresented {
+                presentedHistoryInfo = currentHistoryInfo
+            } else {
+                presentedHistoryInfo = nil
+            }
         }
     }
 
@@ -85,7 +107,7 @@ struct JournalistChatView: View {
         ZStack {
             HStack {
                 Button {
-                    dismiss()
+                    goBackToRoleSelection()
                 } label: {
                     Image("Arrow")
                         .frame(width: 44, height: 44, alignment: .leading)
@@ -94,6 +116,12 @@ struct JournalistChatView: View {
                 .buttonStyle(.plain)
 
                 Spacer()
+
+                HistoryInfoButton(
+                    isPresented: $showHistoryInfo,
+                    hasRead: currentHistoryInfoHasRead,
+                    showsBadge: currentHistoryInfoIsAvailable && endingPage == .none
+                )
             }
 
             VStack(spacing: 4) {
@@ -127,6 +155,40 @@ struct JournalistChatView: View {
             }
         )
         .id("journalistIntro")
+    }
+
+    private var currentHistoryInfo: HistoryInfoData {
+        currentHistoryInfoIsAvailable ? .journalistCrackdownStarted : .resistanceStart
+    }
+
+    private var currentHistoryInfoIsAvailable: Bool {
+        guard endingPage == .none, selectedFirstChoice == nil else { return false }
+
+        return steps.contains { step in
+            switch step.content {
+            case .image(let name, _, _):
+                return name == "editer1"
+            case .firstChoices:
+                return true
+            default:
+                return false
+            }
+        }
+    }
+
+    private var currentHistoryInfoHasRead: Binding<Bool> {
+        Binding(
+            get: {
+                readHistoryInfoIDs.contains(currentHistoryInfo.id)
+            },
+            set: { isRead in
+                if isRead {
+                    readHistoryInfoIDs.insert(currentHistoryInfo.id)
+                } else {
+                    readHistoryInfoIDs.remove(currentHistoryInfo.id)
+                }
+            }
+        )
     }
 
     @ViewBuilder
@@ -228,13 +290,15 @@ struct JournalistChatView: View {
             .narration("그 순간까지 기록합니다."),
             .narration("..."),
             .record(
-                "editer3",
+                "image 35",
                 345,
                 259,
                 [
-                    "광주에서 벌어진 일들은",
-                    "많은 기록을 통해",
-                    "이후 세상에 알려지게 되었습니다."
+                    "독일 기자 힌츠페터 는 광주에 잠입해 시민들과 계엄군의 충돌 현장을",
+                    "카메라에 기록했습니다.",
+                    "",
+                    "그는 금남로와 전남도청 일대에서 촬영한 영상과 사진들을 해외로 전달했고,",
+                    "이는 이후 광주의 상황이 세계에 알려지는 중요한 계기가 되었습니다."
                 ]
             )
         ]
@@ -262,16 +326,37 @@ struct JournalistChatView: View {
     }
 
     private func reveal(_ newSteps: [JournalistStep], completion: (() -> Void)? = nil) {
+        var accumulatedDelay = 0.0
+
         for (index, step) in newSteps.enumerated() {
-            DispatchQueue.main.asyncAfter(deadline: .now() + Double(index + 1) * stepDelay) {
+            accumulatedDelay += stepDelay
+
+            if case .record = step {
+                accumulatedDelay += 2.0
+            }
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + accumulatedDelay) {
                 steps.append(TimelineStep(content: step))
                 scrollTrigger += 1
 
                 if index == newSteps.count - 1 {
-                    completion?()
+                    if case .record(_, _, _, let lines) = step {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + recordTypingDuration(for: lines)) {
+                            completion?()
+                        }
+                    } else {
+                        completion?()
+                    }
                 }
             }
         }
+    }
+
+    private func recordTypingDuration(for lines: [String]) -> Double {
+        let characterCount = lines.reduce(0) { $0 + $1.count }
+        let typingDuration = Double(characterCount) * 0.07
+        let linePauseDuration = Double(lines.count) * 0.55
+        return typingDuration + linePauseDuration + 0.8
     }
 
     private func showEndingAfterDelay() {
@@ -322,7 +407,7 @@ struct JournalistChatView: View {
             }
 
             Button {
-                dismiss()
+                goBackToRoleSelection()
             } label: {
                 Image("Arrow")
                     .frame(width: 44, height: 44, alignment: .leading)
@@ -341,6 +426,14 @@ struct JournalistChatView: View {
             withAnimation(.easeInOut(duration: 0.65)) {
                 proxy.scrollTo("bottom", anchor: .bottom)
             }
+        }
+    }
+
+    private func goBackToRoleSelection() {
+        if let onBackToRoleSelection {
+            onBackToRoleSelection()
+        } else {
+            dismiss()
         }
     }
 }

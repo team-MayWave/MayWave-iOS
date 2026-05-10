@@ -30,11 +30,15 @@ struct CitizenChatView: View {
     }
 
     @Environment(\.dismiss) private var dismiss
+    var onBackToRoleSelection: (() -> Void)? = nil
     @State private var steps: [TimelineStep] = []
     @State private var selectedFirstChoice: String?
     @State private var selectedFallenChoice: String?
     @State private var endingPage: EndingPage = .none
     @State private var scrollTrigger = 0
+    @State private var showHistoryInfo = false
+    @State private var presentedHistoryInfo: HistoryInfoData?
+    @State private var readHistoryInfoIDs: Set<String> = []
 
     private let stepDelay = 2.0
 
@@ -85,6 +89,24 @@ struct CitizenChatView: View {
             } else {
                 endingContent
             }
+
+            if showHistoryInfo {
+                let info = presentedHistoryInfo ?? currentHistoryInfo
+
+                HistoryInfoOverlay(info: info) {
+                    readHistoryInfoIDs.insert(info.id)
+                    withAnimation(.easeOut(duration: 0.25)) {
+                        showHistoryInfo = false
+                    }
+                }
+            }
+        }
+        .onChange(of: showHistoryInfo) { _, isPresented in
+            if isPresented {
+                presentedHistoryInfo = currentHistoryInfo
+            } else {
+                presentedHistoryInfo = nil
+            }
         }
     }
 
@@ -92,7 +114,7 @@ struct CitizenChatView: View {
         ZStack {
             HStack {
                 Button {
-                    dismiss()
+                    goBackToRoleSelection()
                 } label: {
                     Image("Arrow")
                         .frame(width: 44, height: 44, alignment: .leading)
@@ -101,6 +123,12 @@ struct CitizenChatView: View {
                 .buttonStyle(.plain)
 
                 Spacer()
+
+                HistoryInfoButton(
+                    isPresented: $showHistoryInfo,
+                    hasRead: currentHistoryInfoHasRead,
+                    showsBadge: endingPage == .none
+                )
             }
 
             VStack(spacing: 4) {
@@ -115,6 +143,58 @@ struct CitizenChatView: View {
         }
         .padding(.horizontal, 16)
         .padding(.top, 12)
+    }
+
+    private var currentHistoryInfoHasRead: Binding<Bool> {
+        Binding(
+            get: {
+                readHistoryInfoIDs.contains(currentHistoryInfo.id)
+            },
+            set: { hasRead in
+                if hasRead {
+                    readHistoryInfoIDs.insert(currentHistoryInfo.id)
+                } else {
+                    readHistoryInfoIDs.remove(currentHistoryInfo.id)
+                }
+            }
+        )
+    }
+
+    private var currentHistoryInfo: HistoryInfoData {
+        for step in steps.reversed() {
+            switch step.content {
+            case .record(let imageName, _, _, _):
+                if imageName == "image 43" || imageName == "image 44" {
+                    return .geumnamroMarch
+                }
+
+                if imageName == "image 40" {
+                    return .martialControl
+                }
+
+            case .image(let imageName, _, _):
+                if imageName == "twoscene" {
+                    return .citizensOnStreet
+                }
+
+                if imageName == "fourscene" || imageName == "fivescene" {
+                    return .martialControl
+                }
+
+            default:
+                continue
+            }
+        }
+
+        return .resistanceStart
+    }
+
+    private func recordDate(for imageName: String) -> String {
+        if imageName == "image 44" {
+            return "1980년 5월 18일"
+        }
+
+        return "1980년 5월 19일"
     }
 
     private var intro: some View {
@@ -166,6 +246,7 @@ struct CitizenChatView: View {
                 imageName: imageName,
                 imageWidth: width,
                 imageHeight: height,
+                dateText: recordDate(for: imageName),
                 lines: lines
             )
             .padding(.top, 34)
@@ -257,13 +338,18 @@ struct CitizenChatView: View {
             .narration("그날의 일은,"),
             .narration("단순한 충돌로 끝나지 않았습니다."),
             .record(
-                "sevenscene",
-                292,
-                439,
+                "image 40",
+                348,
+                244,
                 [
-                    "더 많은 시민들이 거리로 나오기 시작했습니다.",
-                    "전날의 사건은",
-                    "광주 전역으로 퍼져나갔습니다.",
+                    "사진 속 인물은 훗날 시민군 상황실장을",
+                    "맡게 되는 박남선의 동생, 박남규입니다.",
+                    "당시 금남로 일대에서는 공수부대의 강경 진압이 이어지고 있었으며,",
+                    "박남규는 가톨릭센터 인근에서 공수부대원에게 폭행당했습니다.",
+                    "이러한 진압 장면들은 시민들에게 빠르게 알려졌고,",
+                    "분노한 시민들이 거리로 모여들기 시작했습니다.",
+                    "이후 시위는 학생 중심에서",
+                    "시민 전체로 확산되며 광주 전역으로 퍼져나갔습니다.",
                     "당신은 그 시작을 목격했습니다."
                 ]
             )
@@ -287,16 +373,15 @@ struct CitizenChatView: View {
             .narration("당신은 그 자리에 서서,"),
             .narration("상황을 바라보고 있습니다."),
             .record(
-                "sixscene",
-                355,
-                237,
+                "image 43",
+                348,
+                246,
                 [
-                    "더 많은 시민들이 거리로 나왔습니다.",
-                    "당신이 멀리서 바라보던 그 순간에도,",
-                    "많은 사람들은 같은 자리에서",
-                    "상황을 지켜보고 있었습니다.",
-                    "전날의 일은",
-                    "광주 전역으로 퍼져나갔습니다."
+                    "계엄군의 진압이 계속되자 더 많은 시민들이 금남로로 모여들기 시작했습니다.",
+                    "당시 시민군으로 알려진 ‘김군’과 같은 평범한 시민들도",
+                    "거리에서 시위대와 부상자들을 돕고 있었습니다.",
+                    "학생들의 시위는 시민 전체의 저항으로 확산되고 있었습니다.",
+                    "당신은 그날의 광주를 바라보고 있었습니다."
                 ]
             )
         ]
@@ -318,33 +403,54 @@ struct CitizenChatView: View {
             .narration("당신은 그 자리에 서서,"),
             .narration("그저 상황을 바라보고 있습니다."),
             .record(
-                "threescene",
+                "image 44",
                 348,
                 435,
                 [
-                    "더 많은 시민들이 거리로 나왔습니다.",
-                    "당신이 직접 목격한 그 장면들은",
-                    "사람들 사이에서 빠르게 퍼져나갔습니다.",
-                    "전날의 일은",
-                    "광주 전역으로 퍼져나갔습니다.",
-                    "당신은 그날의 시작을,",
-                    "그 자리에서 지켜보고 있었습니다."
+                    "계엄군의 강경 진압이 이어지면서 광주 시내에는",
+                    "더 많은 시민들이 모여들기 시작했습니다.",
+                    "당시 시민군 대변인을 맡게 되는 윤상원 역시 시민들과",
+                    "함께 광주의 상황을 알리며 민주화를 요구하고 있었습니다.",
+                    "시민들의 증언과 현장의 소식은 빠르게 퍼져나갔고,",
+                    "학생 중심이던 시위는 시민 전체의 저항으로 확산되었습니다.",
+                    "당신은 그날의 광주를 지켜본 시민 중 한 사람이었습니다."
                 ]
             )
         ]
     }
 
     private func reveal(_ newSteps: [CitizenStep], completion: (() -> Void)? = nil) {
+        var accumulatedDelay = 0.0
+
         for (index, step) in newSteps.enumerated() {
-            DispatchQueue.main.asyncAfter(deadline: .now() + Double(index + 1) * stepDelay) {
+            accumulatedDelay += stepDelay
+
+            if case .record = step {
+                accumulatedDelay += 2.0
+            }
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + accumulatedDelay) {
                 steps.append(TimelineStep(content: step))
                 scrollTrigger += 1
 
                 if index == newSteps.count - 1 {
-                    completion?()
+                    if case .record(_, _, _, let lines) = step {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + recordTypingDuration(for: lines)) {
+                            completion?()
+                        }
+                    } else {
+                        completion?()
+                    }
                 }
             }
         }
+    }
+
+    private func recordTypingDuration(for lines: [String]) -> Double {
+        let characterCount = lines.reduce(0) { $0 + $1.count }
+        let typingDuration = Double(characterCount) * 0.07
+        let linePauseDuration = Double(lines.count) * 0.55
+        return typingDuration + linePauseDuration + 0.8
     }
 
     private func showEndingAfterDelay() {
@@ -395,7 +501,7 @@ struct CitizenChatView: View {
             }
 
             Button {
-                dismiss()
+                goBackToRoleSelection()
             } label: {
                 Image("Arrow")
                     .frame(width: 44, height: 44, alignment: .leading)
@@ -414,6 +520,14 @@ struct CitizenChatView: View {
             withAnimation(.easeInOut(duration: 0.65)) {
                 proxy.scrollTo("bottom", anchor: .bottom)
             }
+        }
+    }
+
+    private func goBackToRoleSelection() {
+        if let onBackToRoleSelection {
+            onBackToRoleSelection()
+        } else {
+            dismiss()
         }
     }
 }

@@ -21,6 +21,11 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		4870DF152FB0FF7600A43E4F /* API */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = API;
+			sourceTree = "<group>";
+		};
 		E53EE97D2FA8ED0100E525D1 /* Maywave-iOS */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -55,6 +60,7 @@
 		E53EE9722FA8ED0100E525D1 = {
 			isa = PBXGroup;
 			children = (
+				4870DF152FB0FF7600A43E4F /* API */,
 				E53EE97D2FA8ED0100E525D1 /* Maywave-iOS */,
 				E53EE97C2FA8ED0100E525D1 /* Products */,
 				E5F44FCD2FA9C0C60083DA7F /* View */,
@@ -86,6 +92,7 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
+				4870DF152FB0FF7600A43E4F /* API */,
 				E53EE97D2FA8ED0100E525D1 /* Maywave-iOS */,
 				E5F44FCD2FA9C0C60083DA7F /* View */,
 				E5F44FD72FA9C97E0083DA7F /* Component */,

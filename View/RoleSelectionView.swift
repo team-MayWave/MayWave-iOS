@@ -12,8 +12,7 @@ private struct Role: Identifiable {
     let title: String
     let subtitle: String
     let imageName: String
-    let imageSize: CGSize
-    let imageTopOffset: CGFloat
+    let imageContentOffsetY: CGFloat
 }
 
 private struct ActiveRole: Identifiable {
@@ -24,28 +23,27 @@ struct RoleSelectionView: View {
     @State private var selectedIndex = 0
     @State private var activeRole: ActiveRole?
     private let figmaSize = CGSize(width: 401, height: 866)
+    private let roleImageSize = CGSize(width: 418, height: 510)
+    private let roleImageTopOffset: CGFloat = 45
 
     private let roles = [
         Role(
             title: "시민",
             subtitle: "그날, 평범한 시민이었습니다.\n그리고, 역사의 한가운데 있었습니다.",
             imageName: "citizen",
-            imageSize: CGSize(width: 386, height: 580),
-            imageTopOffset: 45
+            imageContentOffsetY: 0
         ),
         Role(
             title: "의사",
             subtitle: "그날, 환자들이 몰려왔습니다.\n그리고, 멈출 수 없었습니다.",
             imageName: "doctor",
-            imageSize: CGSize(width: 426, height: 499),
-            imageTopOffset: 45
+            imageContentOffsetY: -11
         ),
         Role(
             title: "기자",
             subtitle: "그날, 진실은 쉽게 보이지 않았습니다.\n당신은 그것을 기록하려 합니다.",
             imageName: "editor",
-            imageSize: CGSize(width: 418, height: 510),
-            imageTopOffset: 45
+            imageContentOffsetY: 0
         )
     ]
 
@@ -64,6 +62,9 @@ struct RoleSelectionView: View {
             }
             .ignoresSafeArea()
         }
+        .onAppear {
+            GameAPI.playGame()
+        }
     }
 
     private var figmaFrame: some View {
@@ -72,19 +73,11 @@ struct RoleSelectionView: View {
                 .resizable()
                 .frame(width: figmaSize.width, height: figmaSize.height)
 
-            Image(selectedRole.imageName)
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(
-                    width: selectedRole.imageSize.width,
-                    height: selectedRole.imageSize.height
-                )
+            roleImage
                 .position(
                     x: figmaSize.width / 2,
-                    y: selectedRole.imageTopOffset + selectedRole.imageSize.height / 2
+                    y: roleImageTopOffset + roleImageSize.height / 2
                 )
-                .id(selectedRole.imageName)
-                .transition(.opacity)
 
             arrowButton(systemName: "chevron.left") {
                 moveSelection(by: -1)
@@ -113,16 +106,32 @@ struct RoleSelectionView: View {
         }
         .frame(width: figmaSize.width, height: figmaSize.height)
         .clipped()
-        .animation(.easeInOut(duration: 0.28), value: selectedIndex)
         .fullScreenCover(item: $activeRole) { role in
             if role.id == "의사" {
-                DoctorChatView()
+                DoctorChatView {
+                    activeRole = nil
+                }
             } else if role.id == "시민" {
-                CitizenChatView()
+                CitizenChatView {
+                    activeRole = nil
+                }
             } else {
-                JournalistChatView()
+                JournalistChatView {
+                    activeRole = nil
+                }
             }
         }
+    }
+
+    private var roleImage: some View {
+        ZStack {
+            Image(selectedRole.imageName)
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .frame(width: roleImageSize.width, height: roleImageSize.height)
+                .offset(y: selectedRole.imageContentOffsetY)
+        }
+        .frame(width: roleImageSize.width, height: roleImageSize.height)
     }
 
     private var roleText: some View {
