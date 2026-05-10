@@ -31,11 +31,15 @@ struct DoctorChatView: View {
     }
 
     @Environment(\.dismiss) private var dismiss
+    var onBackToRoleSelection: (() -> Void)? = nil
     @State private var steps: [TimelineStep] = []
     @State private var selectedFirstChoice: String?
     @State private var selectedTreatmentChoice: String?
     @State private var endingPage: EndingPage = .none
     @State private var scrollTrigger = 0
+    @State private var showHistoryInfo = false
+    @State private var presentedHistoryInfo: HistoryInfoData?
+    @State private var readHistoryInfoIDs: Set<String> = []
 
     private let stepDelay = 2.0
 
@@ -87,6 +91,24 @@ struct DoctorChatView: View {
             } else {
                 endingContent
             }
+
+            if showHistoryInfo {
+                let info = presentedHistoryInfo ?? currentHistoryInfo
+
+                HistoryInfoOverlay(info: info) {
+                    readHistoryInfoIDs.insert(info.id)
+                    withAnimation(.easeOut(duration: 0.25)) {
+                        showHistoryInfo = false
+                    }
+                }
+            }
+        }
+        .onChange(of: showHistoryInfo) { _, isPresented in
+            if isPresented {
+                presentedHistoryInfo = currentHistoryInfo
+            } else {
+                presentedHistoryInfo = nil
+            }
         }
     }
 
@@ -94,7 +116,7 @@ struct DoctorChatView: View {
         ZStack {
             HStack {
                 Button {
-                    dismiss()
+                    goBackToRoleSelection()
                 } label: {
                     Image("Arrow")
                         .frame(width: 44, height: 44, alignment: .leading)
@@ -103,6 +125,12 @@ struct DoctorChatView: View {
                 .buttonStyle(.plain)
 
                 Spacer()
+
+                HistoryInfoButton(
+                    isPresented: $showHistoryInfo,
+                    hasRead: currentHistoryInfoHasRead,
+                    showsBadge: currentHistoryInfoIsAvailable && endingPage == .none
+                )
             }
 
             VStack(spacing: 4) {
@@ -117,6 +145,66 @@ struct DoctorChatView: View {
         }
         .padding(.horizontal, 16)
         .padding(.top, 12)
+    }
+
+    private var currentHistoryInfoHasRead: Binding<Bool> {
+        Binding(
+            get: {
+                readHistoryInfoIDs.contains(currentHistoryInfo.id)
+            },
+            set: { hasRead in
+                if hasRead {
+                    readHistoryInfoIDs.insert(currentHistoryInfo.id)
+                } else {
+                    readHistoryInfoIDs.remove(currentHistoryInfo.id)
+                }
+            }
+        )
+    }
+
+    private var currentHistoryInfoIsAvailable: Bool {
+        currentHistoryInfo.id != HistoryInfoData.resistanceStart.id
+    }
+
+    private var currentHistoryInfo: HistoryInfoData {
+        let isTreatmentChoiceVisible = steps.contains { step in
+            if case .treatmentChoices = step.content {
+                return true
+            }
+
+            return false
+        }
+
+        for step in steps.reversed() {
+            switch step.content {
+            case .record(let imageName, _, _, _):
+                if imageName == "doctor4" || imageName == "image 46" {
+                    return .streetTreatmentStarted
+                }
+
+                if imageName == "doctor3" {
+                    return .hospitalFull
+                }
+
+                if imageName == "doctor5" || imageName == "image 50" {
+                    return .hospitalConfusion
+                }
+
+            case .image(let imageName, _, _):
+                if imageName == "doctor1" && isTreatmentChoiceVisible {
+                    return .streetTreatmentStarted
+                }
+
+                if imageName == "doctor2" {
+                    return .hospitalFull
+                }
+
+            default:
+                continue
+            }
+        }
+
+        return .resistanceStart
     }
 
     private var intro: some View {
@@ -271,14 +359,14 @@ struct DoctorChatView: View {
             .narration("눈앞의 생명을 살리기 위해"),
             .narration("다른 선택을 뒤로 미뤄야 했습니다."),
             .record(
-                "doctor4",
-                335,
-                251,
+                "image 46",
+                368,
+                238,
                 [
-                    "당시 현장에서는",
-                    "의료 인력과 장비가 부족한 상황에서",
-                    "많은 부상자들이",
-                    "즉각적인 치료를 받지 못했습니다."
+                    "계엄군의 강경 진압으로 광주 시내 곳곳에서 부상자가 발생했습니다.",
+                    "당시 전남대병원과 광주기독병원 의료진들은 부족한 의료 물품 속에서도",
+                    "시민들을 치료해야 했으며, 의대생과 간호사들 또한 구조 활동에 참여했습니다.",
+                    "병원으로 이송되지 못한 부상자들은 거리에서 응급 처치를 받기도 했습니다."
                 ]
             )
         ]
@@ -306,9 +394,9 @@ struct DoctorChatView: View {
             .narration("환자 수가 계속 늘어나고 있습니다."),
             .narration("당신 혼자 감당할 수 있는 수준이 아닙니다."),
             .record(
-                "doctor5",
-                335,
-                330,
+                "image 50",
+                282,
+                405,
                 [
                     "광주에서는",
                     "많은 부상자들이 발생했고,",
@@ -372,16 +460,37 @@ struct DoctorChatView: View {
     }
 
     private func reveal(_ newSteps: [DoctorStep], completion: (() -> Void)? = nil) {
+        var accumulatedDelay = 0.0
+
         for (index, step) in newSteps.enumerated() {
-            DispatchQueue.main.asyncAfter(deadline: .now() + Double(index + 1) * stepDelay) {
-                    steps.append(TimelineStep(content: step))
+            accumulatedDelay += stepDelay
+
+            if case .record = step {
+                accumulatedDelay += 2.0
+            }
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + accumulatedDelay) {
+                steps.append(TimelineStep(content: step))
                 scrollTrigger += 1
 
                 if index == newSteps.count - 1 {
-                    completion?()
+                    if case .record(_, _, _, let lines) = step {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + recordTypingDuration(for: lines)) {
+                            completion?()
+                        }
+                    } else {
+                        completion?()
+                    }
                 }
             }
         }
+    }
+
+    private func recordTypingDuration(for lines: [String]) -> Double {
+        let characterCount = lines.reduce(0) { $0 + $1.count }
+        let typingDuration = Double(characterCount) * 0.07
+        let linePauseDuration = Double(lines.count) * 0.55
+        return typingDuration + linePauseDuration + 0.8
     }
 
     private func showEndingAfterDelay() {
@@ -447,7 +556,7 @@ struct DoctorChatView: View {
             }
 
             Button {
-                dismiss()
+                goBackToRoleSelection()
             } label: {
                 Image("Arrow")
                     .frame(width: 44, height: 44, alignment: .leading)
@@ -466,6 +575,14 @@ struct DoctorChatView: View {
             withAnimation(.easeInOut(duration: 0.65)) {
                 proxy.scrollTo("bottom", anchor: .bottom)
             }
+        }
+    }
+
+    private func goBackToRoleSelection() {
+        if let onBackToRoleSelection {
+            onBackToRoleSelection()
+        } else {
+            dismiss()
         }
     }
 }

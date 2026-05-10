@@ -2,16 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>UIAppFonts</key>
-	<array>
-		<string>Fonts/NanumMyeongjo.ttf</string>
-		<string>Fonts/NanumMyeongjoBold.ttf</string>
-		<string>Fonts/NanumMyeongjoExtraBold.ttf</string>
-	</array>
-	<key>UILaunchScreen</key>
+	<key>NSAppTransportSecurity</key>
 	<dict>
-		<key>UIImageName</key>
-		<string>logo</string>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
 	</dict>
 	<key>UIAppFonts</key>
 	<array>
@@ -19,5 +13,10 @@
 		<string>NanumMyeongjoBold.ttf</string>
 		<string>NanumMyeongjoExtraBold.ttf</string>
 	</array>
+	<key>UILaunchScreen</key>
+	<dict>
+		<key>UIImageName</key>
+		<string>logo</string>
+	</dict>
 </dict>
 </plist>
