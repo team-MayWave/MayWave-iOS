@@ -16,6 +16,8 @@ class GameAPI {
             return
         }
         
+        print("최종 URL:", url.absoluteString)
+        
         URLSession.shared.dataTask(with: url) { data, response, error in
             
             if let error = error {
