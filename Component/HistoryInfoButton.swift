@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AVFoundation
 
 struct HistoryInfoData: Identifiable, Equatable {
     let id: String
@@ -171,9 +172,14 @@ struct HistoryInfoButton: View {
     @Binding var hasRead: Bool
     let showsBadge: Bool
     @State private var alertOffset: CGFloat = 0
+    @State private var iconRotation: Double = 0
+    @State private var clickAudioPlayer: AVAudioPlayer?
 
     var body: some View {
         Button {
+
+            playClickSound()
+
             withAnimation(.easeOut(duration: 0.25)) {
                 isPresented = true
             }
@@ -182,12 +188,15 @@ struct HistoryInfoButton: View {
                 Image(systemName: "exclamationmark.circle")
                     .font(.system(size: 26, weight: .regular))
                     .foregroundColor(.white.opacity(0.42))
+                    .offset(y: alertOffset)
+                    .rotationEffect(.degrees(iconRotation))
 
                 if showsBadge && !hasRead {
                     Circle()
                         .fill(Color(red: 1.0, green: 0.06, blue: 0.06))
                         .frame(width: 12, height: 12)
                         .offset(x: -3, y: alertOffset)
+                        .rotationEffect(.degrees(iconRotation))
                 }
             }
             .frame(width: 44, height: 44)
@@ -204,6 +213,29 @@ struct HistoryInfoButton: View {
         }
     }
 
+    private func playClickSound() {
+
+        guard let url = Bundle.main.url(
+            forResource: "clik",
+            withExtension: "mp3"
+        ) else {
+            print("clik.mp3 파일을 찾을 수 없습니다.")
+            return
+        }
+
+        do {
+
+            clickAudioPlayer = try AVAudioPlayer(contentsOf: url)
+            clickAudioPlayer?.volume = 0.45
+            clickAudioPlayer?.currentTime = 0.03
+            clickAudioPlayer?.play()
+
+        } catch {
+
+            print(error)
+        }
+    }
+
     private func runUnreadMotionIfNeeded() {
         guard showsBadge && !hasRead else {
             alertOffset = 0
@@ -211,12 +243,16 @@ struct HistoryInfoButton: View {
         }
 
         alertOffset = 0
+        iconRotation = 0
+
         withAnimation(.easeInOut(duration: 0.22).repeatCount(16, autoreverses: true)) {
             alertOffset = -5
+            iconRotation = -12
         }
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 3.6) {
             alertOffset = 0
+            iconRotation = 0
         }
     }
 }
@@ -224,6 +260,7 @@ struct HistoryInfoButton: View {
 struct HistoryInfoOverlay: View {
     let info: HistoryInfoData
     let onClose: () -> Void
+    @State private var clickAudioPlayer: AVAudioPlayer?
 
     init(info: HistoryInfoData = .resistanceStart, onClose: @escaping () -> Void) {
         self.info = info
@@ -240,7 +277,12 @@ struct HistoryInfoOverlay: View {
                     .ignoresSafeArea()
 
                 ZStack(alignment: .topLeading) {
-                    Button(action: onClose) {
+                    Button {
+
+                        playClickSound()
+                        onClose()
+
+                    } label: {
                         Image(systemName: "xmark")
                             .font(.system(size: 20, weight: .regular))
                             .foregroundColor(.white)
@@ -294,6 +336,29 @@ struct HistoryInfoOverlay: View {
         }
         .ignoresSafeArea()
         .transition(.opacity)
+    }
+
+    private func playClickSound() {
+
+        guard let url = Bundle.main.url(
+            forResource: "clik",
+            withExtension: "mp3"
+        ) else {
+            print("clik.mp3 파일을 찾을 수 없습니다.")
+            return
+        }
+
+        do {
+
+            clickAudioPlayer = try AVAudioPlayer(contentsOf: url)
+            clickAudioPlayer?.volume = 0.45
+            clickAudioPlayer?.currentTime = 0.03
+            clickAudioPlayer?.play()
+
+        } catch {
+
+            print(error)
+        }
     }
 
     private var historyBox: some View {

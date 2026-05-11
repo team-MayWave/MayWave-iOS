@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AVFoundation
 
 struct RecordSceneView: View {
     let imageName: String
@@ -15,6 +16,7 @@ struct RecordSceneView: View {
     let lines: [String]
     @State private var typedLines: [String]
     @State private var typingTask: Task<Void, Never>?
+    @State private var typingAudioPlayer: AVAudioPlayer?
 
     init(
         imageName: String,
@@ -69,12 +71,47 @@ struct RecordSceneView: View {
         .onDisappear {
             typingTask?.cancel()
             typingTask = nil
+
+            typingAudioPlayer?.stop()
+            typingAudioPlayer = nil
+        }
+    }
+
+    private func playTypingSound() {
+
+        guard let url = Bundle.main.url(
+            forResource: "Typing",
+            withExtension: "mp3"
+        ) else {
+            print("Typing.mp3 파일을 찾을 수 없습니다.")
+            return
+        }
+
+        do {
+
+            typingAudioPlayer = try AVAudioPlayer(contentsOf: url)
+            typingAudioPlayer?.volume = 0.0
+            typingAudioPlayer?.currentTime = 0.18
+            typingAudioPlayer?.numberOfLoops = -1
+            typingAudioPlayer?.play()
+
+            typingAudioPlayer?.setVolume(0.18, fadeDuration: 0.6)
+
+        } catch {
+
+            print(error)
         }
     }
 
     private func startTyping() {
         typingTask?.cancel()
+
+        typingAudioPlayer?.stop()
+        typingAudioPlayer = nil
+
         typedLines = lines.map { _ in "" }
+
+        playTypingSound()
 
         typingTask = Task {
             for lineIndex in lines.indices {
@@ -95,6 +132,17 @@ struct RecordSceneView: View {
 
                 guard !Task.isCancelled else { return }
                 try? await Task.sleep(nanoseconds: 550_000_000)
+            }
+
+            await MainActor.run {
+                typingAudioPlayer?.setVolume(0.0, fadeDuration: 0.8)
+            }
+
+            try? await Task.sleep(nanoseconds: 900_000_000)
+
+            await MainActor.run {
+                typingAudioPlayer?.stop()
+                typingAudioPlayer = nil
             }
         }
     }

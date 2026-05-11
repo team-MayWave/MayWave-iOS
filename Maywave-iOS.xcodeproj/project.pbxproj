@@ -6,7 +6,12 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		E537E0482FB1E84B00442FF9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E537E0462FB1E84800442FF9 /* AppDelegate.swift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
+		E537E0462FB1E84800442FF9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		E53EE97B2FA8ED0100E525D1 /* Maywave-iOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Maywave-iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -65,6 +70,7 @@
 				E53EE97C2FA8ED0100E525D1 /* Products */,
 				E5F44FCD2FA9C0C60083DA7F /* View */,
 				E5F44FD72FA9C97E0083DA7F /* Component */,
+				E537E0462FB1E84800442FF9 /* AppDelegate.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -153,6 +159,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E537E0482FB1E84B00442FF9 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

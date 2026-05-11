@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AVFoundation
 
 struct DoctorChatView: View {
     private enum EndingPage {
@@ -40,6 +41,9 @@ struct DoctorChatView: View {
     @State private var showHistoryInfo = false
     @State private var presentedHistoryInfo: HistoryInfoData?
     @State private var readHistoryInfoIDs: Set<String> = []
+    @State private var runningAudioPlayer: AVAudioPlayer?
+    @State private var cryingAudioPlayer: AVAudioPlayer?
+    @State private var heartAudioPlayer: AVAudioPlayer?
 
     private let stepDelay = 2.0
 
@@ -287,11 +291,117 @@ struct DoctorChatView: View {
         scrollTrigger += 1
 
         if choice == firstChoices[0] {
+            playRunningSound()
             reveal(treatPatientSteps)
         } else {
             reveal(hospitalDirectSteps) {
                 showEndingAfterDelay()
             }
+        }
+    }
+
+    private func playRunningSound() {
+
+        guard let url = Bundle.main.url(
+            forResource: "Running",
+            withExtension: "mp3"
+        ) else {
+            print("Running.mp3 파일을 찾을 수 없습니다.")
+            return
+        }
+
+        do {
+
+            runningAudioPlayer = try AVAudioPlayer(contentsOf: url)
+            runningAudioPlayer?.volume = 0.0
+            runningAudioPlayer?.currentTime = 0.18
+            runningAudioPlayer?.play()
+
+            runningAudioPlayer?.setVolume(0.3, fadeDuration: 0.18)
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                runningAudioPlayer?.setVolume(0.0, fadeDuration: 1.4)
+            }
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 4.8) {
+                runningAudioPlayer?.stop()
+            }
+
+        } catch {
+
+            print(error)
+        }
+    }
+
+    private func playCryingSound() {
+
+        guard let url = Bundle.main.url(
+            forResource: "crying",
+            withExtension: "mp3"
+        ) else {
+            print("crying.mp3 파일을 찾을 수 없습니다.")
+            return
+        }
+
+        do {
+
+            cryingAudioPlayer = try AVAudioPlayer(contentsOf: url)
+            cryingAudioPlayer?.volume = 0.0
+            cryingAudioPlayer?.currentTime = 0.3
+            cryingAudioPlayer?.numberOfLoops = -1
+            cryingAudioPlayer?.play()
+
+            cryingAudioPlayer?.setVolume(0.08, fadeDuration: 1.0)
+
+        } catch {
+
+            print(error)
+        }
+    }
+
+    private func stopCryingSound() {
+
+        cryingAudioPlayer?.setVolume(0.0, fadeDuration: 2.0)
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.2) {
+            cryingAudioPlayer?.stop()
+            cryingAudioPlayer = nil
+        }
+    }
+
+    private func playHeartSound() {
+
+        guard let url = Bundle.main.url(
+            forResource: "Heart",
+            withExtension: "mp3"
+        ) else {
+            print("Heart.mp3 파일을 찾을 수 없습니다.")
+            return
+        }
+
+        do {
+
+            heartAudioPlayer = try AVAudioPlayer(contentsOf: url)
+            heartAudioPlayer?.volume = 0.0
+            heartAudioPlayer?.currentTime = 0.42
+            heartAudioPlayer?.numberOfLoops = -1
+            heartAudioPlayer?.play()
+
+            heartAudioPlayer?.setVolume(0.16, fadeDuration: 0.6)
+
+        } catch {
+
+            print(error)
+        }
+    }
+
+    private func stopHeartSound() {
+
+        heartAudioPlayer?.setVolume(0.0, fadeDuration: 1.6)
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) {
+            heartAudioPlayer?.stop()
+            heartAudioPlayer = nil
         }
     }
 
@@ -408,7 +518,8 @@ struct DoctorChatView: View {
     }
 
     private var transferPatientSteps: [DoctorStep] {
-        [
+
+        let steps: [DoctorStep] = [
             .narration("당신은 환자를 병원으로 옮기려 했습니다."),
             .narration("하지만 병원 역시"),
             .narration("이미 한계를 넘은 상태였습니다."),
@@ -420,7 +531,9 @@ struct DoctorChatView: View {
             .image("doctor2", 335, 251),
             .narration("병원에 도착했을 때,"),
             .narration("이미 분위기가 심상치 않습니다.")
-        ] + hospitalOverloadSteps
+        ]
+
+        return steps + hospitalOverloadSteps
     }
 
     private var hospitalDirectSteps: [DoctorStep] {
@@ -470,6 +583,29 @@ struct DoctorChatView: View {
             }
 
             DispatchQueue.main.asyncAfter(deadline: .now() + accumulatedDelay) {
+
+                if case .chat(_, let message) = step {
+
+                    if message == "여기요! 여기 좀 봐주세요!" {
+                        playCryingSound()
+                    }
+
+                    if message == "살릴 수 있죠...?" {
+                        stopCryingSound()
+                    }
+                }
+
+                if case .my(let text) = step {
+
+                    if text == "여기 눌러주세요! 계속!" {
+                        playHeartSound()
+                    }
+
+                    if text == "...이송해야 해." {
+                        stopHeartSound()
+                    }
+                }
+
                 steps.append(TimelineStep(content: step))
                 scrollTrigger += 1
 

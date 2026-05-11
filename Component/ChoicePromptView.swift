@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AVFoundation
 
 struct ChoicePromptView: View {
     let title: String
@@ -13,6 +14,7 @@ struct ChoicePromptView: View {
     var selectedChoice: String? = nil
     var onSelect: (String) -> Void = { _ in }
     @State private var isVisible = false
+    @State private var audioPlayer: AVAudioPlayer?
 
     var body: some View {
         VStack(spacing: 20) {
@@ -34,7 +36,12 @@ struct ChoicePromptView: View {
                 ForEach(choices, id: \.self) { choice in
                     Button {
                         guard selectedChoice == nil else { return }
-                        onSelect(choice)
+
+                        playClickSound()
+
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.03) {
+                            onSelect(choice)
+                        }
                     } label: {
                         Text(choice)
                             .font(.custom("NanumMyeongjo", size: 13))
@@ -58,9 +65,55 @@ struct ChoicePromptView: View {
         .opacity(isVisible ? 1 : 0)
         .offset(y: isVisible ? 0 : 10)
         .onAppear {
-            withAnimation(.easeOut(duration: 0.4)) {
-                isVisible = true
+
+            playChoiceAppearSound()
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.06) {
+                withAnimation(.easeOut(duration: 0.4)) {
+                    isVisible = true
+                }
             }
+        }
+    }
+
+    private func playChoiceAppearSound() {
+
+        guard let url = Bundle.main.url(
+            forResource: "choice",
+            withExtension: "mp3"
+        ) else {
+            print("choice.mp3 파일을 찾을 수 없습니다.")
+            return
+        }
+
+        do {
+            audioPlayer = try AVAudioPlayer(contentsOf: url)
+            audioPlayer?.currentTime = 0.18
+            audioPlayer?.volume = 0.35
+            audioPlayer?.play()
+        } catch {
+            print(error)
+        }
+    }
+
+    private func playClickSound() {
+
+        guard let url = Bundle.main.url(
+            forResource: "clik",
+            withExtension: "mp3"
+        ) else {
+            print("clik.mp3 파일을 찾을 수 없습니다.")
+            return
+        }
+
+        do {
+            let clickPlayer = try AVAudioPlayer(contentsOf: url)
+            clickPlayer.currentTime = 0.08
+            clickPlayer.volume = 0.55
+            clickPlayer.play()
+            self.audioPlayer = clickPlayer
+        } catch {
+            print(error)
         }
     }
 

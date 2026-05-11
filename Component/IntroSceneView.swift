@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AVFoundation
 
 struct IntroSceneData {
     let dateText: String
@@ -21,6 +22,8 @@ struct IntroSceneView: View {
 
     @State private var showImage = false
     @State private var visibleMessageCount: Int = 0
+    @State private var audioPlayer: AVAudioPlayer?
+    @State private var bgmPlayer: AVAudioPlayer?
     private let sequenceSpeed = 1.35
 
     var body: some View {
@@ -65,7 +68,79 @@ struct IntroSceneView: View {
 
         }
         .onAppear {
+            playBackgroundMusic()
+            playTruckSound()
             runAnimation()
+        }
+        .onDisappear {
+            fadeOutBackgroundMusic()
+        }
+    }
+
+    private func playBackgroundMusic() {
+
+        guard bgmPlayer == nil else {
+            return
+        }
+
+        guard let url = Bundle.main.url(
+            forResource: "bgm2",
+            withExtension: "mp3"
+        ) else {
+            print("bgm2.mp3 파일을 찾을 수 없습니다.")
+            return
+        }
+
+        do {
+
+            bgmPlayer = try AVAudioPlayer(contentsOf: url)
+            bgmPlayer?.numberOfLoops = -1
+            bgmPlayer?.volume = 0.0
+            bgmPlayer?.play()
+
+            bgmPlayer?.setVolume(0.09, fadeDuration: 2.0)
+
+        } catch {
+
+            print(error)
+        }
+    }
+
+    private func fadeOutBackgroundMusic() {
+
+        bgmPlayer?.setVolume(0.0, fadeDuration: 2.2)
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.4) {
+            bgmPlayer?.stop()
+            bgmPlayer = nil
+        }
+    }
+
+    private func playTruckSound() {
+
+        guard let url = Bundle.main.url(
+            forResource: "truck",
+            withExtension: "mp3"
+        ) else {
+            print("truck.mp3 파일을 찾을 수 없습니다.")
+            return
+        }
+
+        do {
+            audioPlayer = try AVAudioPlayer(contentsOf: url)
+            audioPlayer?.volume = 0.28
+            audioPlayer?.currentTime = 0.8
+            audioPlayer?.play()
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) {
+                audioPlayer?.setVolume(0.0, fadeDuration: 2.6)
+            }
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 4.3) {
+                audioPlayer?.stop()
+            }
+        } catch {
+            print(error)
         }
     }
 

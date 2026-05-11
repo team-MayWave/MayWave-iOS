@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AVFoundation
 
 private struct Role: Identifiable {
     let id = UUID()
@@ -22,6 +23,9 @@ private struct ActiveRole: Identifiable {
 struct RoleSelectionView: View {
     @State private var selectedIndex = 0
     @State private var activeRole: ActiveRole?
+    @State private var audioPlayer: AVAudioPlayer?
+    @State private var isButtonPressed = false
+    @State private var bgmPlayer: AVAudioPlayer?
     private let figmaSize = CGSize(width: 401, height: 866)
     private let roleImageSize = CGSize(width: 418, height: 510)
     private let roleImageTopOffset: CGFloat = 45
@@ -64,6 +68,11 @@ struct RoleSelectionView: View {
         }
         .onAppear {
             GameAPI.playGame()
+            playBackgroundMusic()
+            playRoleVoiceIfNeeded()
+        }
+        .onChange(of: selectedIndex) { _ in
+            playRoleVoiceIfNeeded()
         }
     }
 
@@ -93,7 +102,22 @@ struct RoleSelectionView: View {
                 .position(x: figmaSize.width / 2, y: 662)
 
             Button {
-                activeRole = ActiveRole(id: selectedRole.title)
+
+                playClickSound()
+
+                withAnimation(.easeInOut(duration: 0.12)) {
+                    isButtonPressed = true
+                }
+
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
+
+                    withAnimation(.easeInOut(duration: 0.12)) {
+                        isButtonPressed = false
+                    }
+
+                    activeRole = ActiveRole(id: selectedRole.title)
+                }
+
             } label: {
                 Text("선택하기")
                     .font(.custom("NanumMyeongjo", size: 22))
@@ -102,6 +126,8 @@ struct RoleSelectionView: View {
                     .frame(width: 150, height: 48)
             }
             .buttonStyle(.plain)
+            .scaleEffect(isButtonPressed ? 0.92 : 1.0)
+            .opacity(isButtonPressed ? 0.75 : 1.0)
             .position(x: figmaSize.width / 2, y: 780)
         }
         .frame(width: figmaSize.width, height: figmaSize.height)
@@ -130,8 +156,15 @@ struct RoleSelectionView: View {
                 .aspectRatio(contentMode: .fill)
                 .frame(width: roleImageSize.width, height: roleImageSize.height)
                 .offset(y: selectedRole.imageContentOffsetY)
+                .transition(.opacity)
+                .id(selectedRole.id)
         }
         .frame(width: roleImageSize.width, height: roleImageSize.height)
+        .clipped()
+        .animation(
+            .easeInOut(duration: 0.3),
+            value: selectedRole.id
+        )
     }
 
     private var roleText: some View {
@@ -172,7 +205,107 @@ struct RoleSelectionView: View {
     }
 
     private func moveSelection(by offset: Int) {
-        selectedIndex = (selectedIndex + offset + roles.count) % roles.count
+        withAnimation(.easeInOut(duration: 0.35)) {
+            selectedIndex = (selectedIndex + offset + roles.count) % roles.count
+        }
+    }
+
+    private func playBackgroundMusic() {
+
+        guard bgmPlayer == nil else {
+            return
+        }
+
+        guard let url = Bundle.main.url(
+            forResource: "bgm",
+            withExtension: "mp3"
+        ) else {
+            print("bgm.mp3 파일을 찾을 수 없습니다.")
+            return
+        }
+
+        do {
+
+            bgmPlayer = try AVAudioPlayer(contentsOf: url)
+            bgmPlayer?.numberOfLoops = -1
+            bgmPlayer?.currentTime = 2.0
+            bgmPlayer?.volume = 0.07
+            bgmPlayer?.play()
+
+        } catch {
+
+            print(error)
+        }
+    }
+
+    private func playClickSound() {
+
+        guard let url = Bundle.main.url(
+            forResource: "clik",
+            withExtension: "mp3"
+        ) else {
+            print("clik.mp3 파일을 찾을 수 없습니다.")
+            return
+        }
+
+        do {
+
+            bgmPlayer?.setVolume(0.0, fadeDuration: 0.08)
+
+            let clickPlayer = try AVAudioPlayer(contentsOf: url)
+            clickPlayer.volume = 0.7
+            clickPlayer.play()
+
+
+            self.audioPlayer = clickPlayer
+
+        } catch {
+
+            print(error)
+        }
+    }
+
+    private func playRoleVoiceIfNeeded() {
+
+        let fileName: String
+
+        switch selectedRole.title {
+        case "기자":
+            fileName = "reporter"
+
+        case "시민":
+            fileName = "Citizen"
+
+        case "의사":
+            fileName = "Doctor"
+
+        default:
+            return
+        }
+
+        guard let url = Bundle.main.url(
+            forResource: fileName,
+            withExtension: "mp3"
+        ) else {
+            print("\(fileName).mp3 파일을 찾을 수 없습니다.")
+            return
+        }
+
+        do {
+
+            if audioPlayer?.isPlaying == true {
+                audioPlayer?.stop()
+            }
+
+            audioPlayer = try AVAudioPlayer(contentsOf: url)
+            audioPlayer?.currentTime = 0
+            audioPlayer?.volume = 1.0
+            audioPlayer?.play()
+
+        } catch {
+
+            print(error)
+        }
     }
 }
 

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AVFoundation
 
 struct CitizenChatView: View {
     private enum EndingPage {
@@ -39,6 +40,13 @@ struct CitizenChatView: View {
     @State private var showHistoryInfo = false
     @State private var presentedHistoryInfo: HistoryInfoData?
     @State private var readHistoryInfoIDs: Set<String> = []
+    @State private var armyAudioPlayer: AVAudioPlayer?
+    @State private var walkAudioPlayer: AVAudioPlayer?
+    @State private var bodyFallAudioPlayer: AVAudioPlayer?
+    @State private var armyBGMPlayer: AVAudioPlayer?
+    @State private var armyMsAudioPlayer: AVAudioPlayer?
+    @State private var suppressionAudioPlayer: AVAudioPlayer?
+    @State private var anthemAudioPlayer: AVAudioPlayer?
 
     private let stepDelay = 2.0
 
@@ -121,7 +129,7 @@ struct CitizenChatView: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-
+                .zIndex(999)
                 Spacer()
 
                 HistoryInfoButton(
@@ -216,9 +224,45 @@ struct CitizenChatView: View {
                     .narration("잠시 후, 군인들이 시내로 이동합니다."),
                     .firstChoices
                 ])
+
+                DispatchQueue.main.asyncAfter(deadline: .now() + 6) {
+                    playArmySound()
+                }
             }
         )
         .id("citizenIntro")
+    }
+    private func playArmySound() {
+
+        guard let url = Bundle.main.url(
+            forResource: "army",
+            withExtension: "mp3"
+        ) else {
+            print("army.mp3 파일을 찾을 수 없습니다.")
+            return
+        }
+
+        do {
+
+            armyAudioPlayer = try AVAudioPlayer(contentsOf: url)
+            armyAudioPlayer?.volume = 0.0
+            armyAudioPlayer?.currentTime = 0.5
+            armyAudioPlayer?.play()
+
+            armyAudioPlayer?.setVolume(0.14, fadeDuration: 1.0)
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.6) {
+                armyAudioPlayer?.setVolume(0.0, fadeDuration: 1.4)
+            }
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3.2) {
+                armyAudioPlayer?.stop()
+            }
+
+        } catch {
+
+            print(error)
+        }
     }
 
     @ViewBuilder
@@ -419,6 +463,204 @@ struct CitizenChatView: View {
         ]
     }
 
+    private func playArmyBGMSound() {
+
+        guard let url = Bundle.main.url(
+            forResource: "armyBGM",
+            withExtension: "mp3"
+        ) else {
+            print("armyBGM.mp3 파일을 찾을 수 없습니다.")
+            return
+        }
+
+        do {
+
+            armyBGMPlayer = try AVAudioPlayer(contentsOf: url)
+            armyBGMPlayer?.volume = 0.0
+            armyBGMPlayer?.currentTime = 0.15
+            armyBGMPlayer?.play()
+
+            armyBGMPlayer?.setVolume(0.12, fadeDuration: 1.2)
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 8.0) {
+                armyBGMPlayer?.setVolume(0.0, fadeDuration: 4.0)
+            }
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 13.0) {
+                armyBGMPlayer?.stop()
+            }
+
+        } catch {
+
+            print(error)
+        }
+    }
+
+    private func playWalkSound() {
+
+        guard let url = Bundle.main.url(
+            forResource: "walk",
+            withExtension: "mp3"
+        ) else {
+            print("walk.mp3 파일을 찾을 수 없습니다.")
+            return
+        }
+
+        do {
+
+            walkAudioPlayer = try AVAudioPlayer(contentsOf: url)
+            walkAudioPlayer?.volume = 0.0
+            walkAudioPlayer?.currentTime = 0.08
+            walkAudioPlayer?.play()
+
+            walkAudioPlayer?.setVolume(0.18, fadeDuration: 0.45)
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) {
+                walkAudioPlayer?.setVolume(0.0, fadeDuration: 1.8)
+            }
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) {
+                walkAudioPlayer?.stop()
+            }
+
+        } catch {
+
+            print(error)
+        }
+    }
+
+    private func playArmyMsSound() {
+
+        guard let url = Bundle.main.url(
+            forResource: "armyMs",
+            withExtension: "mp3"
+        ) else {
+            print("armyMs.mp3 파일을 찾을 수 없습니다.")
+            return
+        }
+
+        do {
+
+            armyMsAudioPlayer = try AVAudioPlayer(contentsOf: url)
+            armyMsAudioPlayer?.volume = 0.0
+            armyMsAudioPlayer?.currentTime = 0.18
+            armyMsAudioPlayer?.play()
+
+            armyMsAudioPlayer?.setVolume(0.12, fadeDuration: 0.45)
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.2) {
+                armyMsAudioPlayer?.setVolume(0.0, fadeDuration: 2.0)
+            }
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 4.8) {
+                armyMsAudioPlayer?.stop()
+            }
+
+        } catch {
+
+            print(error)
+        }
+    }
+
+    private func playSuppressionSound() {
+
+        guard let url = Bundle.main.url(
+            forResource: "진압",
+            withExtension: "mp3"
+        ) else {
+            print("진압.mp3 파일을 찾을 수 없습니다.")
+            return
+        }
+
+        do {
+
+            suppressionAudioPlayer = try AVAudioPlayer(contentsOf: url)
+            suppressionAudioPlayer?.volume = 0.0
+            suppressionAudioPlayer?.currentTime = 0.2
+            suppressionAudioPlayer?.play()
+
+            suppressionAudioPlayer?.setVolume(0.09, fadeDuration: 0.7)
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) {
+                suppressionAudioPlayer?.setVolume(0.0, fadeDuration: 3.0)
+            }
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 8.0) {
+                suppressionAudioPlayer?.stop()
+            }
+
+        } catch {
+
+            print(error)
+        }
+    }
+
+    private func playAnthemSound() {
+
+        guard let url = Bundle.main.url(
+            forResource: "애국가",
+            withExtension: "mp3"
+        ) else {
+            print("애국가.mp3 파일을 찾을 수 없습니다.")
+            return
+        }
+
+        do {
+
+            anthemAudioPlayer = try AVAudioPlayer(contentsOf: url)
+            anthemAudioPlayer?.volume = 0.0
+            anthemAudioPlayer?.currentTime = 18.0
+            anthemAudioPlayer?.play()
+
+            anthemAudioPlayer?.setVolume(0.22, fadeDuration: 1.4)
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 7.0) {
+                anthemAudioPlayer?.setVolume(0.0, fadeDuration: 4.0)
+            }
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 12.0) {
+                anthemAudioPlayer?.stop()
+            }
+
+        } catch {
+
+            print(error)
+        }
+    }
+
+    private func playBodyFallSound() {
+
+        guard let url = Bundle.main.url(
+            forResource: "BodyFall",
+            withExtension: "mp3"
+        ) else {
+            print("BodyFall.mp3 파일을 찾을 수 없습니다.")
+            return
+        }
+
+        do {
+
+            bodyFallAudioPlayer = try AVAudioPlayer(contentsOf: url)
+            bodyFallAudioPlayer?.volume = 0.0
+            bodyFallAudioPlayer?.currentTime = 0.32
+            bodyFallAudioPlayer?.play()
+
+            bodyFallAudioPlayer?.setVolume(0.16, fadeDuration: 0.12)
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.1) {
+                bodyFallAudioPlayer?.setVolume(0.0, fadeDuration: 1.4)
+            }
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                bodyFallAudioPlayer?.stop()
+            }
+
+        } catch {
+
+            print(error)
+        }
+    }
+
     private func reveal(_ newSteps: [CitizenStep], completion: (() -> Void)? = nil) {
         var accumulatedDelay = 0.0
 
@@ -430,6 +672,56 @@ struct CitizenChatView: View {
             }
 
             DispatchQueue.main.asyncAfter(deadline: .now() + accumulatedDelay) {
+
+                if case .narration(let text) = step {
+
+                    if text == "당신은 불안함 속에서도 발걸음을 옮겼습니다." {
+                        playWalkSound()
+                    }
+
+                    if text == "군인들이 줄을 서 있습니다." {
+                        playArmyMsSound()
+                    }
+
+                    if text == "앞쪽에서 갑자기 사람들이 크게 움직이기 시작합니다." {
+                        playSuppressionSound()
+                    }
+
+                    if text == "사람들 사이에 가려 앞쪽이 잘 보이지 않습니다." {
+                        playAnthemSound()
+                    }
+                }
+
+                if case .chat(_, let message) = step {
+                    if message == "일으켜! 괜찮아?!" {
+                        if newSteps.contains(where: {
+                            if case .narration("넘어지는 사람이 보입니다.") = $0 {
+                                return true
+                            }
+                            return false
+                        }) {
+                            playBodyFallSound()
+                        }
+                    }
+                }
+
+                if case .record(let imageName, _, _, _) = step {
+                    if imageName == "image 44" {
+                        playAnthemSound()
+                    }
+                }
+
+                if case .image(let imageName, _, _) = step {
+
+                    if imageName == "twoscene" {
+                        playArmyBGMSound()
+                    }
+
+                    if imageName == "fourscene" {
+                        playSuppressionSound()
+                    }
+                }
+
                 steps.append(TimelineStep(content: step))
                 scrollTrigger += 1
 
@@ -524,10 +816,13 @@ struct CitizenChatView: View {
     }
 
     private func goBackToRoleSelection() {
-        if let onBackToRoleSelection {
-            onBackToRoleSelection()
-        } else {
-            dismiss()
+        print("🔙 뒤로가기 버튼 눌림")
+
+        dismiss()
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            print("✅ onBackToRoleSelection closure 실행")
+            onBackToRoleSelection?()
         }
     }
 }

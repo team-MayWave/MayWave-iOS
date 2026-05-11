@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AVFoundation
 
 struct JournalistChatView: View {
     private enum EndingPage {
@@ -37,6 +38,7 @@ struct JournalistChatView: View {
     @State private var showHistoryInfo = false
     @State private var presentedHistoryInfo: HistoryInfoData?
     @State private var readHistoryInfoIDs: Set<String> = []
+    @State private var suppressionAudioPlayer: AVAudioPlayer?
 
     private let stepDelay = 2.0
 
@@ -325,6 +327,42 @@ struct JournalistChatView: View {
         ]
     }
 
+    private func playSuppressionSound() {
+
+        guard let url = Bundle.main.url(
+            forResource: "진압",
+            withExtension: "mp3"
+        ) else {
+            print("진압.mp3 파일을 찾을 수 없습니다.")
+            return
+        }
+
+        do {
+
+            suppressionAudioPlayer = try AVAudioPlayer(contentsOf: url)
+            suppressionAudioPlayer?.volume = 0.0
+            suppressionAudioPlayer?.currentTime = 0.35
+            suppressionAudioPlayer?.numberOfLoops = -1
+            suppressionAudioPlayer?.play()
+
+            suppressionAudioPlayer?.setVolume(0.08, fadeDuration: 1.0)
+
+        } catch {
+
+            print(error)
+        }
+    }
+
+    private func stopSuppressionSound() {
+
+        suppressionAudioPlayer?.setVolume(0.0, fadeDuration: 2.0)
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.2) {
+            suppressionAudioPlayer?.stop()
+            suppressionAudioPlayer = nil
+        }
+    }
+
     private func reveal(_ newSteps: [JournalistStep], completion: (() -> Void)? = nil) {
         var accumulatedDelay = 0.0
 
@@ -336,6 +374,21 @@ struct JournalistChatView: View {
             }
 
             DispatchQueue.main.asyncAfter(deadline: .now() + accumulatedDelay) {
+
+                if case .chat(_, let message) = step {
+
+                    if message == "다쳤어요 여기 좀 봐주세요!" {
+                        playSuppressionSound()
+                    }
+                }
+
+                if case .narration(let text) = step {
+
+                    if text == "부상자들이 계속 발생하고 있습니다." {
+                        stopSuppressionSound()
+                    }
+                }
+
                 steps.append(TimelineStep(content: step))
                 scrollTrigger += 1
 
