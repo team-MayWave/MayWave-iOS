@@ -177,8 +177,12 @@ struct CitizenChatView: View {
                     return .citizensOnStreet
                 }
 
-                if imageName == "fourscene" || imageName == "fivescene" {
+                if imageName == "fourscene" {
                     return .martialControl
+                }
+
+                if imageName == "fivescene" {
+                    return .geumnamroMarch
                 }
 
             default:
