@@ -579,11 +579,8 @@ struct DoctorChatView: View {
     }
 
     private func goBackToRoleSelection() {
-        if let onBackToRoleSelection {
-            onBackToRoleSelection()
-        } else {
-            dismiss()
-        }
+        onBackToRoleSelection?()
+        dismiss()
     }
 }
 
