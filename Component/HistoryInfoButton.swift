@@ -46,7 +46,7 @@ extension HistoryInfoData {
         id: "geumnamroMarch",
         title: "학생들이 금남로로 향하기 시작한 순간",
         subtitle: "시민들은 “금남로로 가자”를 외치며 이동했습니다.\n시위는 광주 시내로 퍼져갔습니다.",
-        imageName: "sixscene",
+        imageName: "image 42",
         imageSize: CGSize(width: 321, height: 210),
         imageCornerRadius: 6,
         dateText: "1980년 5월 18일 오전 10시 20분",
