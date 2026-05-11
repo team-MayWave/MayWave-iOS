@@ -34,9 +34,12 @@ struct IntroSceneView: View {
                     Text(data.dateText)
                         .font(.custom("NanumMyeongjo", size: 15))
                         .foregroundColor(Color("detail"))
+                        .id(data.dateText)
+                        .transition(.opacity.combined(with: .move(edge: .top)))
 
                     Image("RRectangle")
                 }
+                .animation(.easeInOut(duration: 0.45), value: data.dateText)
 
                 Text(data.locationText)
                     .font(.custom("NanumMyeongjo", size: 12))

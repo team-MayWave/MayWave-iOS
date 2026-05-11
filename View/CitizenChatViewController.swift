@@ -136,13 +136,37 @@ struct CitizenChatView: View {
                     .font(.custom("NanumMyeongjoExtraBold", size: 25))
                     .foregroundColor(.white)
 
-                Text("1980년 5월 18일, 광주")
+                Text(headerDateText)
                     .font(.custom("NanumMyeongjo", size: 15))
                     .foregroundColor(Color("Narration"))
+                    .id(headerDateText)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
             }
+            .animation(.easeInOut(duration: 0.45), value: headerDateText)
         }
         .padding(.horizontal, 16)
         .padding(.top, 12)
+    }
+
+    private var headerDateText: String {
+        "1980년 \(timelineDateText), 광주"
+    }
+
+    private var timelineDateText: String {
+        for step in steps.reversed() {
+            if case .record(let imageName, _, _, _) = step.content {
+                return dayText(from: recordDate(for: imageName))
+            }
+        }
+
+        return "5월 18일"
+    }
+
+    private func dayText(from dateText: String) -> String {
+        if dateText.contains("5월 22일") { return "5월 22일" }
+        if dateText.contains("5월 20일") { return "5월 20일" }
+        if dateText.contains("5월 19일") { return "5월 19일" }
+        return "5월 18일"
     }
 
     private var currentHistoryInfoHasRead: Binding<Bool> {
@@ -177,8 +201,12 @@ struct CitizenChatView: View {
                     return .citizensOnStreet
                 }
 
-                if imageName == "fourscene" || imageName == "fivescene" {
+                if imageName == "fourscene" {
                     return .martialControl
+                }
+
+                if imageName == "fivescene" {
+                    return .geumnamroMarch
                 }
 
             default:
@@ -190,8 +218,8 @@ struct CitizenChatView: View {
     }
 
     private func recordDate(for imageName: String) -> String {
-        if imageName == "image 44" {
-            return "1980년 5월 18일"
+        if imageName == "image 43" {
+            return "1980년 5월 22일"
         }
 
         return "1980년 5월 19일"
@@ -200,7 +228,7 @@ struct CitizenChatView: View {
     private var intro: some View {
         IntroSceneView(
             data: IntroSceneData(
-                dateText: "5월 18일",
+                dateText: timelineDateText,
                 locationText: "광주, 금남로",
                 imageName: "Basicscene",
                 messages: [
@@ -377,11 +405,12 @@ struct CitizenChatView: View {
                 348,
                 246,
                 [
-                    "계엄군의 진압이 계속되자 더 많은 시민들이 금남로로 모여들기 시작했습니다.",
-                    "당시 시민군으로 알려진 ‘김군’과 같은 평범한 시민들도",
-                    "거리에서 시위대와 부상자들을 돕고 있었습니다.",
-                    "학생들의 시위는 시민 전체의 저항으로 확산되고 있었습니다.",
-                    "당신은 그날의 광주를 바라보고 있었습니다."
+                    "사진 속 인물은 훗날 ‘김군’으로 알려진 차복환 씨입니다.",
+                    "차복환 씨는 1980년 5월 21일 시민군에 합류한 뒤,",
+                    "5월 22일 군복을 입고 페퍼포그차 위에 선 모습이",
+                    "사진으로 기록되었습니다.",
+                    "그는 특별한 군인이 아니라",
+                    "광주의 시민군으로 활동했던 평범한 시민이었습니다."
                 ]
             )
         ]
@@ -524,11 +553,8 @@ struct CitizenChatView: View {
     }
 
     private func goBackToRoleSelection() {
-        if let onBackToRoleSelection {
-            onBackToRoleSelection()
-        } else {
-            dismiss()
-        }
+        onBackToRoleSelection?()
+        dismiss()
     }
 }
 

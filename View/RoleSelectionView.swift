@@ -63,7 +63,7 @@ struct RoleSelectionView: View {
             .ignoresSafeArea()
         }
         .onAppear {
-            GameAPI.playGame()
+            GameAPI.playGame(roleId: 2, scenarioId: 1, choice: 1)
         }
     }
 

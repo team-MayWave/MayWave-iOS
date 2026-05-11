@@ -129,19 +129,43 @@ struct JournalistChatView: View {
                     .font(.custom("NanumMyeongjoExtraBold", size: 25))
                     .foregroundColor(.white)
 
-                Text("1980년 5월 18일, 광주")
+                Text(headerDateText)
                     .font(.custom("NanumMyeongjo", size: 15))
                     .foregroundColor(Color("Narration"))
+                    .id(headerDateText)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
             }
+            .animation(.easeInOut(duration: 0.45), value: headerDateText)
         }
         .padding(.horizontal, 16)
         .padding(.top, 12)
     }
 
+    private var headerDateText: String {
+        "1980년 \(timelineDateText), 광주"
+    }
+
+    private var timelineDateText: String {
+        for step in steps.reversed() {
+            if case .record(let imageName, _, _, _) = step.content {
+                return dayText(from: recordDate(for: imageName))
+            }
+        }
+
+        return "5월 18일"
+    }
+
+    private func dayText(from dateText: String) -> String {
+        if dateText.contains("5월 22일") { return "5월 22일" }
+        if dateText.contains("5월 20일") { return "5월 20일" }
+        if dateText.contains("5월 19일") { return "5월 19일" }
+        return "5월 18일"
+    }
+
     private var intro: some View {
         IntroSceneView(
             data: IntroSceneData(
-                dateText: "5월 18일",
+                dateText: timelineDateText,
                 locationText: "광주, 금남로",
                 imageName: "Basicscene",
                 messages: [
@@ -216,6 +240,7 @@ struct JournalistChatView: View {
                 imageName: imageName,
                 imageWidth: width,
                 imageHeight: height,
+                dateText: recordDate(for: imageName),
                 lines: lines
             )
             .padding(.top, 34)
@@ -245,6 +270,14 @@ struct JournalistChatView: View {
                 showEndingAfterDelay()
             }
         }
+    }
+
+    private func recordDate(for imageName: String) -> String {
+        if imageName == "image 35" {
+            return "1980년 5월 20일"
+        }
+
+        return "1980년 5월 19일"
     }
 
     private var baseSteps: [JournalistStep] {
@@ -294,11 +327,12 @@ struct JournalistChatView: View {
                 345,
                 259,
                 [
-                    "독일 기자 힌츠페터 는 광주에 잠입해 시민들과 계엄군의 충돌 현장을",
-                    "카메라에 기록했습니다.",
-                    "",
-                    "그는 금남로와 전남도청 일대에서 촬영한 영상과 사진들을 해외로 전달했고,",
-                    "이는 이후 광주의 상황이 세계에 알려지는 중요한 계기가 되었습니다."
+                    "독일 기자 힌츠페터는 1980년 5월 20일 광주에 들어와",
+                    "시민들과 계엄군의 충돌 현장을 카메라에 기록했습니다.",
+                    "그는 금남로와 전남도청 일대에서 촬영한 영상과 사진을",
+                    "해외로 전달했고,",
+                    "이는 이후 광주의 상황이 세계에 알려지는",
+                    "중요한 계기가 되었습니다."
                 ]
             )
         ]
@@ -430,11 +464,8 @@ struct JournalistChatView: View {
     }
 
     private func goBackToRoleSelection() {
-        if let onBackToRoleSelection {
-            onBackToRoleSelection()
-        } else {
-            dismiss()
-        }
+        onBackToRoleSelection?()
+        dismiss()
     }
 }
 
